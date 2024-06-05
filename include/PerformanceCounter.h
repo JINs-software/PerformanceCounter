@@ -43,6 +43,7 @@ public:
 	}
 
 	void SetCounter(const std::string& counterName, LPCWSTR counter);
+	void SetProcessCounter(const std::string& counterName, LPCWSTR counter, LPCWSTR param);
 	void SetCpuUsageCounter();
 	void ResetPerfCounter();
 	double GetPerfCounter(const std::string& counterName);

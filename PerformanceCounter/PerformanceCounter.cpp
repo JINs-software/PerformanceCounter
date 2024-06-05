@@ -13,6 +13,25 @@ void PerformanceCounter::SetCounter(const std::string& counterName, LPCWSTR coun
 	m_CounterMap[counterName].counterValue = { 0 };
 	ReleaseSRWLockExclusive(&m_CounterMapSrwLock);
 }
+void PerformanceCounter::SetProcessCounter(const std::string& counterName, LPCWSTR counter, LPCWSTR processName) {
+	std::wstring counterStr(counter);
+	std::wstring paramStr(processName);
+	std::wstring placeholder = L"@processName";
+
+	size_t pos = counterStr.find(placeholder);
+	if (pos != std::wstring::npos) {
+		counterStr.replace(pos, placeholder.length(), paramStr);
+	}
+
+	PDH_HCOUNTER hCounter;
+	PdhAddCounter(m_hQuery, counterStr.c_str(), NULL, &hCounter);
+	PdhCollectQueryData(m_hQuery);
+
+	AcquireSRWLockExclusive(&m_CounterMapSrwLock);
+	m_CounterMap[counterName].hCounter = hCounter;
+	m_CounterMap[counterName].counterValue = { 0 };
+	ReleaseSRWLockExclusive(&m_CounterMapSrwLock);
+}
 
 void PerformanceCounter::SetCpuUsageCounter() {
 
