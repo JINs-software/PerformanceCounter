@@ -25,6 +25,7 @@
   <ItemGroup>
     <ClInclude Include="..\include\CounterQueryString.h" />
     <ClInclude Include="..\include\CpuUsageCounter.h" />
+    <ClInclude Include="..\include\PerfCounterConfig.h" />
     <ClInclude Include="..\include\PerformanceCounter.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
@@ -129,6 +130,8 @@
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+      <Optimization>MaxSpeed</Optimization>
+      <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
     </ClCompile>
     <Link>
       <SubSystem>
@@ -146,7 +149,8 @@
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <Optimization>Disabled</Optimization>
+      <Optimization>MaxSpeed</Optimization>
+      <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
     </ClCompile>
     <Link>
       <SubSystem>

@@ -8,5 +8,6 @@
     <ClInclude Include="..\include\CounterQueryString.h" />
     <ClInclude Include="..\include\PerformanceCounter.h" />
     <ClInclude Include="..\include\CpuUsageCounter.h" />
+    <ClInclude Include="..\include\PerfCounterConfig.h" />
   </ItemGroup>
 </Project>

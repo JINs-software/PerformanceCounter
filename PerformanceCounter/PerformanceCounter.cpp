@@ -1,21 +1,29 @@
 #include "PerformanceCounter.h"
 #include <string>
+#include <assert.h>
 
-void PerformanceCounter::SetCounter(const std::string& counterName, LPCWSTR counter) {
+void PerformanceCounter::SetCounter(BYTE counterNo, LPCWSTR counterQuery) {
 	// PDH 리소스 카운터 생성
 	// 쿼리 핸들에 카운터를 바인딩하는 방식
 	// 하나의 쿼리 핸들에 여러 카운터를 바인딩할 수 있다.
 	PDH_HCOUNTER hCounter;
-	PdhAddCounter(m_hQuery, counter, NULL, &hCounter);
+	PdhAddCounter(m_hQuery, counterQuery, NULL, &hCounter);
 	PdhCollectQueryData(m_hQuery);
 
-	AcquireSRWLockExclusive(&m_CounterMapSrwLock);
-	m_CounterMap[counterName].hCounter = hCounter;
-	m_CounterMap[counterName].counterValue = { 0 };
-	ReleaseSRWLockExclusive(&m_CounterMapSrwLock);
+	//AcquireSRWLockExclusive(&m_CounterMapSrwLock);
+	//m_CounterMap[counterName].hCounter = hCounter;
+	//m_CounterMap[counterName].counterValue = { 0 };
+	//ReleaseSRWLockExclusive(&m_CounterMapSrwLock);
+
+	assert(counterNo < m_CounterVec.size());
+	if (m_CounterVec[counterNo].hCounter != NULL) {
+		PdhRemoveCounter(m_CounterVec[counterNo].hCounter);
+	}
+	m_CounterVec[counterNo].hCounter = hCounter;
+	m_CounterVec[counterNo].counterValue = { 0 };
 }
-void PerformanceCounter::SetProcessCounter(const std::string& counterName, LPCWSTR counter, LPCWSTR processName) {
-	std::wstring counterStr(counter);
+void PerformanceCounter::SetProcessCounter(BYTE counterNo, LPCWSTR counterQuery, LPCWSTR processName) {
+	std::wstring counterStr(counterQuery);
 	std::wstring paramStr(processName);
 	std::wstring placeholder = L"@param";
 
@@ -28,15 +36,22 @@ void PerformanceCounter::SetProcessCounter(const std::string& counterName, LPCWS
 	PdhAddCounter(m_hQuery, counterStr.c_str(), NULL, &hCounter);
 	PdhCollectQueryData(m_hQuery);
 
-	AcquireSRWLockExclusive(&m_CounterMapSrwLock);
-	m_CounterMap[counterName].hCounter = hCounter;
-	m_CounterMap[counterName].counterValue = { 0 };
-	ReleaseSRWLockExclusive(&m_CounterMapSrwLock);
+	//AcquireSRWLockExclusive(&m_CounterMapSrwLock);
+	//m_CounterMap[counterName].hCounter = hCounter;
+	//m_CounterMap[counterName].counterValue = { 0 };
+	//ReleaseSRWLockExclusive(&m_CounterMapSrwLock);
+
+	assert(counterNo < m_CounterVec.size());
+	if (m_CounterVec[counterNo].hCounter != NULL) {
+		PdhRemoveCounter(m_CounterVec[counterNo].hCounter);
+	}
+	m_CounterVec[counterNo].hCounter = hCounter;
+	m_CounterVec[counterNo].counterValue = { 0 };
 }
 
-void PerformanceCounter::SetThreadCounter(const std::string& counterName, LPCWSTR counter, LPCWSTR processName, DWORD threadID)
+void PerformanceCounter::SetThreadCounter(BYTE counterNo, LPCWSTR counterQuery, LPCWSTR processName, DWORD threadID)
 {
-	std::wstring counterStr(counter);
+	std::wstring counterStr(counterQuery);
 	std::wstring threadIDWStr = std::to_wstring(threadID);
 	std::wstring paramStr(processName);
 	paramStr += L"/";
@@ -53,10 +68,28 @@ void PerformanceCounter::SetThreadCounter(const std::string& counterName, LPCWST
 	PdhAddCounter(m_hQuery, counterStr.c_str(), NULL, &hCounter);
 	PdhCollectQueryData(m_hQuery);
 
-	AcquireSRWLockExclusive(&m_CounterMapSrwLock);
-	m_CounterMap[counterName].hCounter = hCounter;
-	m_CounterMap[counterName].counterValue = { 0 };
-	ReleaseSRWLockExclusive(&m_CounterMapSrwLock);
+	//AcquireSRWLockExclusive(&m_CounterMapSrwLock);
+	//m_CounterMap[counterName].hCounter = hCounter;
+	//m_CounterMap[counterName].counterValue = { 0 };
+	//ReleaseSRWLockExclusive(&m_CounterMapSrwLock);
+
+	assert(counterNo < m_CounterVec.size());
+	if (m_CounterVec[counterNo].hCounter != NULL) {
+		PdhRemoveCounter(m_CounterVec[counterNo].hCounter);
+	}
+	m_CounterVec[counterNo].hCounter = hCounter;
+	m_CounterVec[counterNo].counterValue = { 0 };
+}
+
+void PerformanceCounter::UnserCounter(BYTE counterNo)
+{
+	assert(counterNo < m_CounterVec.size());
+	if (m_CounterVec[counterNo].hCounter != NULL) {
+		PdhRemoveCounter(m_CounterVec[counterNo].hCounter);
+
+		m_CounterVec[counterNo].hCounter = NULL;
+		m_CounterVec[counterNo].counterValue = { 0 };
+	}
 }
 
 void PerformanceCounter::SetCpuUsageCounter() {
@@ -76,12 +109,26 @@ void PerformanceCounter::SetCpuUsageCounterThread()
 	m_CpuUsageCounter->UpdateCpuTime();
 }
 
-void PerformanceCounter::ResetPerfCounter() {
-	AcquireSRWLockShared(&m_CounterMapSrwLock);
-	for (auto& iter : m_CounterMap) {
-		PdhGetFormattedCounterValue(iter.second.hCounter, PDH_FMT_DOUBLE, NULL, &iter.second.counterValue);
+void PerformanceCounter::UnsetCpuUsageCounter()
+{
+	if (m_CpuUsageCounter != NULL) {
+		delete m_CpuUsageCounter;
+		m_CpuUsageCounter = NULL;
 	}
-	ReleaseSRWLockShared(&m_CounterMapSrwLock);
+}
+
+void PerformanceCounter::ResetPerfCounterItems() {
+	//AcquireSRWLockShared(&m_CounterMapSrwLock);
+	//for (auto& iter : m_CounterMap) {
+	//	PdhGetFormattedCounterValue(iter.second.hCounter, PDH_FMT_DOUBLE, NULL, &iter.second.counterValue);
+	//}
+	//ReleaseSRWLockShared(&m_CounterMapSrwLock);
+
+	for (int i = 0; i < m_CounterVec.size(); i++) {
+		if (m_CounterVec[i].hCounter != NULL) {
+			PdhGetFormattedCounterValue(m_CounterVec[i].hCounter, PDH_FMT_DOUBLE, NULL, &m_CounterVec[i].counterValue);
+		}
+	}
 
 	if (m_CpuUsageCounter != NULL) {
 		m_CpuUsageCounter->UpdateCpuTime();
@@ -89,19 +136,22 @@ void PerformanceCounter::ResetPerfCounter() {
 }
 
 
-double PerformanceCounter::GetPerfCounter(const std::string& counterName) {
+double PerformanceCounter::GetPerfCounterItem(BYTE counterNo) {
 	double ret = 0.0;
+	//
+	//AcquireSRWLockShared(&m_CounterMapSrwLock);
+	//if (m_CounterMap.find(counterName) == m_CounterMap.end()) {
+	//	DebugBreak();
+	//}
+	//else {
+	//	ret = m_CounterMap[counterName].counterValue.doubleValue;
+	//}
+	//ReleaseSRWLockShared(&m_CounterMapSrwLock);
+	//
+	//return ret;
 
-	AcquireSRWLockShared(&m_CounterMapSrwLock);
-	if (m_CounterMap.find(counterName) == m_CounterMap.end()) {
-		DebugBreak();
-	}
-	else {
-		ret = m_CounterMap[counterName].counterValue.doubleValue;
-	}
-	ReleaseSRWLockShared(&m_CounterMapSrwLock);
-
-	return ret;
+	assert(counterNo < m_CounterVec.size());
+	return m_CounterVec[counterNo].counterValue.doubleValue;
 }
 
 //UINT __stdcall PerformanceCounter::PerformanceCounterFunc(void* arg)

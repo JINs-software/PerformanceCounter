@@ -46,10 +46,15 @@ private:
 	// Thread
 	////////////////////////////////////////////////
 public:
-	inline void AddThreadHandle() {
+	void AddThreadHandle() {
 		HANDLE hTargetThreadHandle;
 		DuplicateHandle(GetCurrentProcess(), GetCurrentThread(), GetCurrentProcess(), &hTargetThreadHandle, 0, FALSE, DUPLICATE_SAME_ACCESS);
 		_hThreads.insert({ GetCurrentThreadId(), stThreadInfo(hTargetThreadHandle)});
+	}
+	void DeleteThreadHandle() {
+		if (_hThreads.find(GetCurrentThreadId()) != _hThreads.end()) {
+			_hThreads.erase(GetCurrentThreadId());
+		}
 	}
 
 	inline float ThreadTotal(DWORD thID) { return _hThreads[thID]._fThreadTotal; }
