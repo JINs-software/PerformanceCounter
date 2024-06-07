@@ -1,4 +1,5 @@
 #include "PerformanceCounter.h"
+#include <string>
 
 void PerformanceCounter::SetCounter(const std::string& counterName, LPCWSTR counter) {
 	// PDH 府家胶 墨款磐 积己
@@ -16,7 +17,32 @@ void PerformanceCounter::SetCounter(const std::string& counterName, LPCWSTR coun
 void PerformanceCounter::SetProcessCounter(const std::string& counterName, LPCWSTR counter, LPCWSTR processName) {
 	std::wstring counterStr(counter);
 	std::wstring paramStr(processName);
-	std::wstring placeholder = L"@processName";
+	std::wstring placeholder = L"@param";
+
+	size_t pos = counterStr.find(placeholder);
+	if (pos != std::wstring::npos) {
+		counterStr.replace(pos, placeholder.length(), paramStr);
+	}
+
+	PDH_HCOUNTER hCounter;
+	PdhAddCounter(m_hQuery, counterStr.c_str(), NULL, &hCounter);
+	PdhCollectQueryData(m_hQuery);
+
+	AcquireSRWLockExclusive(&m_CounterMapSrwLock);
+	m_CounterMap[counterName].hCounter = hCounter;
+	m_CounterMap[counterName].counterValue = { 0 };
+	ReleaseSRWLockExclusive(&m_CounterMapSrwLock);
+}
+
+void PerformanceCounter::SetThreadCounter(const std::string& counterName, LPCWSTR counter, LPCWSTR processName, DWORD threadID)
+{
+	std::wstring counterStr(counter);
+	std::wstring threadIDWStr = std::to_wstring(threadID);
+	std::wstring paramStr(processName);
+	paramStr += L"/";
+	paramStr += threadIDWStr;
+
+	std::wstring placeholder = L"@param";
 
 	size_t pos = counterStr.find(placeholder);
 	if (pos != std::wstring::npos) {
@@ -34,8 +60,19 @@ void PerformanceCounter::SetProcessCounter(const std::string& counterName, LPCWS
 }
 
 void PerformanceCounter::SetCpuUsageCounter() {
+	if (m_CpuUsageCounter == NULL) {
+		m_CpuUsageCounter = new CpuUsageCounter();
+		m_CpuUsageCounter->UpdateCpuTime();
+	}
+}
 
-	m_CpuUsageCounter = new CpuUsageCounter();
+void PerformanceCounter::SetCpuUsageCounterThread()
+{
+	if (m_CpuUsageCounter == NULL) {
+		SetCpuUsageCounter();
+	}
+
+	m_CpuUsageCounter->AddThreadHandle();
 	m_CpuUsageCounter->UpdateCpuTime();
 }
 

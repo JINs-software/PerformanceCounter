@@ -140,4 +140,23 @@ void CpuUsageCounter::UpdateCpuTime(void)
 	_ftProcess_LastTime = NowTime;
 	_ftProcess_LastKernel = Kernel;
 	_ftProcess_LastUser = User;
+
+	//for (auto& iter : _hThreads) {
+	for(auto iter = _hThreads.begin(); iter != _hThreads.end(); iter++) {
+		GetThreadTimes(iter->second._hThread, (LPFILETIME)&None, (LPFILETIME)&None, (LPFILETIME)&Kernel, (LPFILETIME)&User);
+
+		TimeDiff = NowTime.QuadPart - iter->second._ftThread_LastTime.QuadPart;
+		UserDiff = User.QuadPart - iter->second._ftThread_LastUser.QuadPart;
+		KernelDiff = Kernel.QuadPart - iter->second._ftThread_LastKernel.QuadPart;
+
+		Total = KernelDiff + UserDiff;
+
+		iter->second._fThreadTotal = (float)(Total / (double)_iNumberOfProcessors / (double)TimeDiff * 100.0f);
+		iter->second._fThreadKernel = (float)(KernelDiff / (double)_iNumberOfProcessors / (double)TimeDiff * 100.0f);
+		iter->second._fThreadUser = (float)(UserDiff / (double)_iNumberOfProcessors / (double)TimeDiff * 100.0f);
+
+		iter->second._ftThread_LastTime = NowTime;
+		iter->second._ftThread_LastKernel = Kernel;
+		iter->second._ftThread_LastUser = User;
+	}
 }

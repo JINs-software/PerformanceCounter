@@ -43,8 +43,10 @@ public:
 	}
 
 	void SetCounter(const std::string& counterName, LPCWSTR counter);
-	void SetProcessCounter(const std::string& counterName, LPCWSTR counter, LPCWSTR param);
+	void SetProcessCounter(const std::string& counterName, LPCWSTR counter, LPCWSTR processName);
+	void SetThreadCounter(const std::string& counterName, LPCWSTR counter, LPCWSTR processName, DWORD threadID);
 	void SetCpuUsageCounter();
+	void SetCpuUsageCounterThread();
 	void ResetPerfCounter();
 	double GetPerfCounter(const std::string& counterName);
 
@@ -81,6 +83,43 @@ public:
 	inline float ProcessKernel(void) {
 		if (m_CpuUsageCounter != NULL) {
 			return m_CpuUsageCounter->ProcessKernel();
+		}
+		return 0.0;
+	}
+
+	inline float ThreadTotal() {
+		if (m_CpuUsageCounter != NULL) {
+			return m_CpuUsageCounter->ThreadTotal(GetCurrentThreadId());
+		}
+		return 0.0;
+	}
+	inline float ThreadUser() {
+		if (m_CpuUsageCounter != NULL) {
+			return m_CpuUsageCounter->ThreadUser(GetCurrentThreadId());
+		}
+		return 0.0;
+	}
+	inline float ThreadKernel() {
+		if (m_CpuUsageCounter != NULL) {
+			return m_CpuUsageCounter->ThreadKernel(GetCurrentThreadId());
+		}
+		return 0.0;
+	}
+	inline float ThreadTotal(DWORD thID) {
+		if (m_CpuUsageCounter != NULL) {
+			return m_CpuUsageCounter->ThreadTotal(thID);
+		}
+		return 0.0;
+	}
+	inline float ThreadUser(DWORD thID) {
+		if (m_CpuUsageCounter != NULL) {
+			return m_CpuUsageCounter->ThreadUser(thID);
+		}
+		return 0.0;
+	}
+	inline float ThreadKernel(DWORD thID) {
+		if (m_CpuUsageCounter != NULL) {
+			return m_CpuUsageCounter->ThreadKernel(thID);
 		}
 		return 0.0;
 	}
