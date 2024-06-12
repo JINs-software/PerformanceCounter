@@ -1,6 +1,7 @@
 #include "PerformanceCounter.h"
 #include <string>
 #include <assert.h>
+#include <strsafe.h>
 
 void PerformanceCounter::SetCounter(BYTE counterNo, LPCWSTR counterQuery) {
 	// PDH 府家胶 墨款磐 积己
@@ -92,6 +93,44 @@ void PerformanceCounter::UnserCounter(BYTE counterNo)
 	}
 }
 
+bool PerformanceCounter::SetEthernetCounter()
+{
+	int iCnt = 0;
+	bool bErr = false;
+	WCHAR* szCur = NULL;
+	WCHAR* szCounters = NULL;
+	WCHAR* szInterfaces = NULL;
+	DWORD dwCounterSize = 0, dwInterfaceSize = 0;
+	WCHAR szQuery[1024] = { 0, };
+
+	PdhEnumObjectItems(NULL, NULL, L"Network Interface", szCounters, &dwCounterSize, szInterfaces, &dwInterfaceSize, PERF_DETAIL_WIZARD, 0);
+	szCounters = new WCHAR[dwCounterSize];
+	szInterfaces = new WCHAR[dwInterfaceSize];
+
+	if (PdhEnumObjectItems(NULL, NULL, L"Network Interface", szCounters, &dwCounterSize, szInterfaces, &dwInterfaceSize, PERF_DETAIL_WIZARD,
+		0) != ERROR_SUCCESS)
+	{
+		delete[] szCounters;
+		delete[] szInterfaces;
+		return false;
+	}
+
+	for (; *szCur != L'\0' && iCnt < df_PDH_ETHERNET_MAX; szCur += wcslen(szCur) + 1, iCnt++)
+	{
+		m_EthernetStruct[iCnt]._bUse = true;
+		m_EthernetStruct[iCnt]._szName[0] = L'\0';
+		wcscpy_s(m_EthernetStruct[iCnt]._szName, szCur);
+		szQuery[0] = L'\0';
+		StringCbPrintf(szQuery, sizeof(WCHAR) * 1024, L"\\Network Interface(%s)\\Bytes Received/sec", szCur);
+		PdhAddCounter(m_hQuery, szQuery, NULL, &m_EthernetStruct[iCnt]._pdh_Counter_Network_RecvBytes);
+		szQuery[0] = L'\0';
+		StringCbPrintf(szQuery, sizeof(WCHAR) * 1024, L"\\Network Interface(%s)\\Bytes Sent/sec", szCur);
+		PdhAddCounter(m_hQuery, szQuery, NULL, &m_EthernetStruct[iCnt]._pdh_Counter_Network_SendBytes);
+	}
+
+	m_EthernetMontFlag = true;
+}
+
 void PerformanceCounter::SetCpuUsageCounter() {
 	if (m_CpuUsageCounter == NULL) {
 		m_CpuUsageCounter = new CpuUsageCounter();
@@ -124,9 +163,29 @@ void PerformanceCounter::ResetPerfCounterItems() {
 	//}
 	//ReleaseSRWLockShared(&m_CounterMapSrwLock);
 
+	PDH_STATUS Status;
+	PDH_FMT_COUNTERVALUE CounterValue;
+
 	for (int i = 0; i < m_CounterVec.size(); i++) {
 		if (m_CounterVec[i].hCounter != NULL) {
-			PdhGetFormattedCounterValue(m_CounterVec[i].hCounter, PDH_FMT_DOUBLE, NULL, &m_CounterVec[i].counterValue);
+			Status = PdhGetFormattedCounterValue(m_CounterVec[i].hCounter, PDH_FMT_DOUBLE, NULL, &m_CounterVec[i].counterValue);
+		}
+	}
+
+	if (m_EthernetMontFlag) {
+		for (int iCnt = 0; iCnt < df_PDH_ETHERNET_MAX; iCnt++)
+		{
+			if (m_EthernetStruct[iCnt]._bUse)
+			{
+				Status = PdhGetFormattedCounterValue(m_EthernetStruct[iCnt]._pdh_Counter_Network_RecvBytes, PDH_FMT_DOUBLE, NULL, &CounterValue);
+				if (Status == 0) {
+					m_pdh_value_Network_RecvBytes += CounterValue.doubleValue;
+				}
+				Status = PdhGetFormattedCounterValue(m_EthernetStruct[iCnt]._pdh_Counter_Network_SendBytes, PDH_FMT_DOUBLE, NULL, &CounterValue);
+				if (Status == 0) {
+					m_pdh_value_Network_SendBytes += CounterValue.doubleValue;
+				}
+			}
 		}
 	}
 
@@ -138,20 +197,27 @@ void PerformanceCounter::ResetPerfCounterItems() {
 
 double PerformanceCounter::GetPerfCounterItem(BYTE counterNo) {
 	double ret = 0.0;
-	//
-	//AcquireSRWLockShared(&m_CounterMapSrwLock);
-	//if (m_CounterMap.find(counterName) == m_CounterMap.end()) {
-	//	DebugBreak();
-	//}
-	//else {
-	//	ret = m_CounterMap[counterName].counterValue.doubleValue;
-	//}
-	//ReleaseSRWLockShared(&m_CounterMapSrwLock);
-	//
-	//return ret;
 
 	assert(counterNo < m_CounterVec.size());
 	return m_CounterVec[counterNo].counterValue.doubleValue;
+}
+
+double PerformanceCounter::GetPerfEthernetRecvBytes()
+{
+	double ret = 0.0;
+	if (m_EthernetMontFlag) {
+		ret = m_pdh_value_Network_RecvBytes;
+	}
+	return ret;
+}
+
+double PerformanceCounter::GetPerfEthernetSendBytes()
+{
+	double ret = 0.0;
+	if (m_EthernetMontFlag) {
+		ret = m_pdh_value_Network_SendBytes;
+	}
+	return ret;
 }
 
 //UINT __stdcall PerformanceCounter::PerformanceCounterFunc(void* arg)

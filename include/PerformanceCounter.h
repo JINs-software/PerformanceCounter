@@ -16,26 +16,35 @@
 
 class PerformanceCounter
 {
+	struct st_ETHERNET {
+		bool _bUse;
+		WCHAR _szName[128];
+		PDH_HCOUNTER _pdh_Counter_Network_RecvBytes;
+		PDH_HCOUNTER _pdh_Counter_Network_SendBytes;
+	};
+
 private:
 	CpuUsageCounter*					m_CpuUsageCounter;
 	PDH_HQUERY							m_hQuery;
-	//std::vector<PDH_HCOUNTER>			m_hCounters;
-	//std::vector<PDH_FMT_COUNTERVALUE>	m_CounterValues;
 
 	struct stPerfCounter {
 		PDH_HCOUNTER			hCounter;
 		PDH_FMT_COUNTERVALUE	counterValue;
 	};
-	//std::map<std::string, stPerfCounter>	m_CounterMap;
-	//SRWLOCK									m_CounterMapSrwLock;
-	std::vector<stPerfCounter>				m_CounterVec;
+	std::vector<stPerfCounter>			m_CounterVec;
+
+	// 이더넷 모니터링
+	bool								m_EthernetMontFlag;
+	st_ETHERNET							m_EthernetStruct[df_PDH_ETHERNET_MAX]; // 랜카드 별 PDH 정보 
+	double								m_pdh_value_Network_RecvBytes;  // 총 Recv Bytes  모든 이더넷의 Recv 수치 합산 
+	double								m_pdh_value_Network_SendBytes;  // 총 Send Bytes 모든 이더넷의 Send 수치 합산 
 
 	HANDLE								m_hCounterThread;
 	bool								m_Stop;
 
 public:
 	PerformanceCounter() 
-		: m_CpuUsageCounter(NULL), m_Stop(false)
+		: m_CpuUsageCounter(NULL), m_Stop(false), m_EthernetMontFlag(false)
 	{
 		//InitializeSRWLock(&m_CounterMapSrwLock);
 		m_CounterVec.resize(dfMAXIMUM_NUM_OF_COUNTER_ITEMS, { 0 });
@@ -50,12 +59,16 @@ public:
 	void SetThreadCounter(BYTE counterNo, LPCWSTR counterQuery, LPCWSTR processName, DWORD threadID);
 	void UnserCounter(BYTE counterNo);
 
+	bool SetEthernetCounter();
+
 	void SetCpuUsageCounter();
 	void SetCpuUsageCounterThread();
 	void UnsetCpuUsageCounter();
 
 	void ResetPerfCounterItems();
 	double GetPerfCounterItem(BYTE counterNo);
+	double GetPerfEthernetRecvBytes();
+	double GetPerfEthernetSendBytes();
 
 	inline float ProcessorTotal(void) { 
 		if (m_CpuUsageCounter != NULL) {
