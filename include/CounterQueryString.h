@@ -2,10 +2,10 @@
 
 #define dfQUERY_TOTAL_CPU_USAGE				L"\\Processor(_Total)\\% Processor Time"	// CPU 전체 사용률
 											
-#define dfQUERY_CORE0_CPU_USAGE				L"\\Processor(0)\\% Processor Time"	// CPU 코어 사용률
-#define dfQUERY_CORE1_CPU_USAGE				L"\\Processor(1)\\% Processor Time"	// CPU 코어 사용률
-#define dfQUERY_CORE2_CPU_USAGE				L"\\Processor(2)\\% Processor Time"	// CPU 코어 사용률
-#define dfQUERY_CORE3_CPU_USAGE				L"\\Processor(3)\\% Processor Time"	// CPU 코어 사용률
+#define dfQUERY_CORE0_CPU_USAGE				L"\\Processor(0)\\% Processor Time"			// CPU 코어 사용률
+#define dfQUERY_CORE1_CPU_USAGE				L"\\Processor(1)\\% Processor Time"			// CPU 코어 사용률
+#define dfQUERY_CORE2_CPU_USAGE				L"\\Processor(2)\\% Processor Time"			// CPU 코어 사용률
+#define dfQUERY_CORE3_CPU_USAGE				L"\\Processor(3)\\% Processor Time"			// CPU 코어 사용률
 											
 #define dfQUERY_PROCESS_CPU_USER_USAGE		L"\\Process(@param)\\% User Time"			// 프로세스 CPU 유저 사용률
 #define dfQUERY_PROCESS_CPU_TOTAL_USAGE		L"\\Process(@param)\\% Processor Time"		// 프로세스 CPU 전체 사용률
@@ -20,3 +20,8 @@
 
 #define dfQUERY_MEMORY_AVAILABLE			L"\\Memory\\Available MBytes"			// 사용가능 메모리
 #define dfQUERY_MEMORY_NON_PAGED			L"\\Memory\\Pool Nonpaged Bytes"		// 논페이지드 메모리
+
+//\Network Interface(*)\Bytes Received / sec
+#define dfQUERY_ETHERNET_BYTES_RECEIVED_SEC	L"\\Network Interface(*)\\Bytes Received/sec"
+#define dfQUERY_ETHERNET_BYTES_SENT_SEC		L"\\Network Interface(*)\\Bytes Sent/sec"
+//\Network Interface(*)\Bytes Sent/sec

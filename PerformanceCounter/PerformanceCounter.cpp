@@ -107,27 +107,43 @@ bool PerformanceCounter::SetEthernetCounter()
 	szCounters = new WCHAR[dwCounterSize];
 	szInterfaces = new WCHAR[dwInterfaceSize];
 
-	if (PdhEnumObjectItems(NULL, NULL, L"Network Interface", szCounters, &dwCounterSize, szInterfaces, &dwInterfaceSize, PERF_DETAIL_WIZARD,
-		0) != ERROR_SUCCESS)
+	if (PdhEnumObjectItems(NULL, NULL, L"Network Interface", szCounters, &dwCounterSize, szInterfaces, &dwInterfaceSize, PERF_DETAIL_WIZARD, 0) != ERROR_SUCCESS)
 	{
 		delete[] szCounters;
 		delete[] szInterfaces;
 		return false;
 	}
 
+	iCnt = 0;
+	szCur = szInterfaces;
+
 	for (; *szCur != L'\0' && iCnt < df_PDH_ETHERNET_MAX; szCur += wcslen(szCur) + 1, iCnt++)
 	{
 		m_EthernetStruct[iCnt]._bUse = true;
 		m_EthernetStruct[iCnt]._szName[0] = L'\0';
+
 		wcscpy_s(m_EthernetStruct[iCnt]._szName, szCur);
+
 		szQuery[0] = L'\0';
 		StringCbPrintf(szQuery, sizeof(WCHAR) * 1024, L"\\Network Interface(%s)\\Bytes Received/sec", szCur);
-		PdhAddCounter(m_hQuery, szQuery, NULL, &m_EthernetStruct[iCnt]._pdh_Counter_Network_RecvBytes);
+		if (PdhAddCounter(m_hQuery, szQuery, NULL, &m_EthernetStruct[iCnt]._pdh_Counter_Network_RecvBytes) != ERROR_SUCCESS) {
+			DebugBreak();
+		}
+		else {
+			std::cout << "Success, PdhAddCounter (Bytes Received/sec) " << std::endl;
+		}
+
 		szQuery[0] = L'\0';
 		StringCbPrintf(szQuery, sizeof(WCHAR) * 1024, L"\\Network Interface(%s)\\Bytes Sent/sec", szCur);
-		PdhAddCounter(m_hQuery, szQuery, NULL, &m_EthernetStruct[iCnt]._pdh_Counter_Network_SendBytes);
+		if (PdhAddCounter(m_hQuery, szQuery, NULL, &m_EthernetStruct[iCnt]._pdh_Counter_Network_SendBytes) != ERROR_SUCCESS) {
+			DebugBreak();
+		}
+		else {
+			std::cout << "Success, PdhAddCounter (Bytes Sent/sec) " << std::endl;
+		}
 	}
 
+	PdhCollectQueryData(m_hQuery);
 	m_EthernetMontFlag = true;
 }
 
@@ -163,16 +179,27 @@ void PerformanceCounter::ResetPerfCounterItems() {
 	//}
 	//ReleaseSRWLockShared(&m_CounterMapSrwLock);
 
+	PdhCollectQueryData(m_hQuery);
+
 	PDH_STATUS Status;
 	PDH_FMT_COUNTERVALUE CounterValue;
 
 	for (int i = 0; i < m_CounterVec.size(); i++) {
 		if (m_CounterVec[i].hCounter != NULL) {
-			Status = PdhGetFormattedCounterValue(m_CounterVec[i].hCounter, PDH_FMT_DOUBLE, NULL, &m_CounterVec[i].counterValue);
+			Status = PdhGetFormattedCounterValue(m_CounterVec[i].hCounter, PDH_FMT_DOUBLE, NULL, &CounterValue);
+			if (Status == 0) {
+				m_CounterVec[i].counterValue = CounterValue;
+			}
+			else {
+				DebugBreak();
+			}
 		}
 	}
 
 	if (m_EthernetMontFlag) {
+		m_pdh_value_Network_RecvBytes = 0;
+		m_pdh_value_Network_SendBytes = 0;
+
 		for (int iCnt = 0; iCnt < df_PDH_ETHERNET_MAX; iCnt++)
 		{
 			if (m_EthernetStruct[iCnt]._bUse)
@@ -181,9 +208,15 @@ void PerformanceCounter::ResetPerfCounterItems() {
 				if (Status == 0) {
 					m_pdh_value_Network_RecvBytes += CounterValue.doubleValue;
 				}
+				else {
+					std::cout << "Fail, PdhGetFormattedCounterValue (_pdh_Counter_Network_RecvBytes)" << std::endl;
+				}
 				Status = PdhGetFormattedCounterValue(m_EthernetStruct[iCnt]._pdh_Counter_Network_SendBytes, PDH_FMT_DOUBLE, NULL, &CounterValue);
 				if (Status == 0) {
 					m_pdh_value_Network_SendBytes += CounterValue.doubleValue;
+				}
+				else {
+					std::cout << "Fail, PdhGetFormattedCounterValue (_pdh_Counter_Network_SendBytes)" << std::endl;
 				}
 			}
 		}
