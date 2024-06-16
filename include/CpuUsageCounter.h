@@ -42,41 +42,41 @@ private:
 	ULARGE_INTEGER _ftProcess_LastUser;
 	ULARGE_INTEGER _ftProcess_LastTime;
 
-	////////////////////////////////////////////////
-	// Thread
-	////////////////////////////////////////////////
-public:
-	void AddThreadHandle() {
-		HANDLE hTargetThreadHandle;
-		DuplicateHandle(GetCurrentProcess(), GetCurrentThread(), GetCurrentProcess(), &hTargetThreadHandle, 0, FALSE, DUPLICATE_SAME_ACCESS);
-		_hThreads.insert({ GetCurrentThreadId(), stThreadInfo(hTargetThreadHandle)});
-	}
-	void DeleteThreadHandle() {
-		if (_hThreads.find(GetCurrentThreadId()) != _hThreads.end()) {
-			_hThreads.erase(GetCurrentThreadId());
-		}
-	}
-
-	inline float ThreadTotal(DWORD thID) { return _hThreads[thID]._fThreadTotal; }
-	inline float ThreadUser(DWORD thID) { return _hThreads[thID]._fThreadUser; }
-	inline float ThreadKernel(DWORD thID) { return _hThreads[thID]._fThreadKernel; }
-
-
-private:
-	struct stThreadInfo {
-		HANDLE _hThread;
-
-		float _fThreadTotal = 0;
-		float _fThreadUser = 0;
-		float _fThreadKernel = 0;
-
-		ULARGE_INTEGER _ftThread_LastKernel = { 0 };
-		ULARGE_INTEGER _ftThread_LastUser = { 0 };
-		ULARGE_INTEGER _ftThread_LastTime = { 0 };
-
-		stThreadInfo() {}
-		stThreadInfo(HANDLE hThrd) : _hThread(hThrd) {}
-	};
-	std::map<DWORD, stThreadInfo> _hThreads;
+//	////////////////////////////////////////////////
+//	// Thread
+//	////////////////////////////////////////////////
+//public:
+//	void AddThreadHandle() {
+//		HANDLE hTargetThreadHandle;
+//		DuplicateHandle(GetCurrentProcess(), GetCurrentThread(), GetCurrentProcess(), &hTargetThreadHandle, 0, FALSE, DUPLICATE_SAME_ACCESS);
+//		_hThreads.insert({ GetCurrentThreadId(), stThreadInfo(hTargetThreadHandle)});
+//	}
+//	void DeleteThreadHandle() {
+//		if (_hThreads.find(GetCurrentThreadId()) != _hThreads.end()) {
+//			_hThreads.erase(GetCurrentThreadId());
+//		}
+//	}
+//
+//	inline float ThreadTotal(DWORD thID) { return _hThreads[thID]._fThreadTotal; }
+//	inline float ThreadUser(DWORD thID) { return _hThreads[thID]._fThreadUser; }
+//	inline float ThreadKernel(DWORD thID) { return _hThreads[thID]._fThreadKernel; }
+//
+//
+//private:
+//	struct stThreadInfo {
+//		HANDLE _hThread;
+//
+//		float _fThreadTotal = 0;
+//		float _fThreadUser = 0;
+//		float _fThreadKernel = 0;
+//
+//		ULARGE_INTEGER _ftThread_LastKernel = { 0 };
+//		ULARGE_INTEGER _ftThread_LastUser = { 0 };
+//		ULARGE_INTEGER _ftThread_LastTime = { 0 };
+//
+//		stThreadInfo() {}
+//		stThreadInfo(HANDLE hThrd) : _hThread(hThrd) {}
+//	};
+//	std::map<DWORD, stThreadInfo> _hThreads;
 };
 

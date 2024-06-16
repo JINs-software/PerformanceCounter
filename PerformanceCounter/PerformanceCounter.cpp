@@ -127,7 +127,9 @@ bool PerformanceCounter::SetEthernetCounter()
 		szQuery[0] = L'\0';
 		StringCbPrintf(szQuery, sizeof(WCHAR) * 1024, L"\\Network Interface(%s)\\Bytes Received/sec", szCur);
 		if (PdhAddCounter(m_hQuery, szQuery, NULL, &m_EthernetStruct[iCnt]._pdh_Counter_Network_RecvBytes) != ERROR_SUCCESS) {
+#if defined(PERFCOUNTER_ASSERT)
 			DebugBreak();
+#endif
 		}
 		else {
 			std::cout << "Success, PdhAddCounter (Bytes Received/sec) " << std::endl;
@@ -136,7 +138,9 @@ bool PerformanceCounter::SetEthernetCounter()
 		szQuery[0] = L'\0';
 		StringCbPrintf(szQuery, sizeof(WCHAR) * 1024, L"\\Network Interface(%s)\\Bytes Sent/sec", szCur);
 		if (PdhAddCounter(m_hQuery, szQuery, NULL, &m_EthernetStruct[iCnt]._pdh_Counter_Network_SendBytes) != ERROR_SUCCESS) {
+#if defined(PERFCOUNTER_ASSERT)
 			DebugBreak();
+#endif
 		}
 		else {
 			std::cout << "Success, PdhAddCounter (Bytes Sent/sec) " << std::endl;
@@ -154,15 +158,15 @@ void PerformanceCounter::SetCpuUsageCounter() {
 	}
 }
 
-void PerformanceCounter::SetCpuUsageCounterThread()
-{
-	if (m_CpuUsageCounter == NULL) {
-		SetCpuUsageCounter();
-	}
-
-	m_CpuUsageCounter->AddThreadHandle();
-	m_CpuUsageCounter->UpdateCpuTime();
-}
+//void PerformanceCounter::SetCpuUsageCounterThread()
+//{
+//	if (m_CpuUsageCounter == NULL) {
+//		SetCpuUsageCounter();
+//	}
+//
+//	m_CpuUsageCounter->AddThreadHandle();
+//	m_CpuUsageCounter->UpdateCpuTime();
+//}
 
 void PerformanceCounter::UnsetCpuUsageCounter()
 {
@@ -190,9 +194,11 @@ void PerformanceCounter::ResetPerfCounterItems() {
 			if (Status == 0) {
 				m_CounterVec[i].counterValue = CounterValue;
 			}
+#if defined(PERFCOUNTER_ASSERT)
 			else {
 				DebugBreak();
 			}
+#endif
 		}
 	}
 

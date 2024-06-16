@@ -62,8 +62,8 @@ public:
 	bool SetEthernetCounter();
 
 	void SetCpuUsageCounter();
-	void SetCpuUsageCounterThread();
 	void UnsetCpuUsageCounter();
+	//void SetCpuUsageCounterThread();
 
 	void ResetPerfCounterItems();
 	double GetPerfCounterItem(BYTE counterNo);
@@ -107,42 +107,42 @@ public:
 		return 0.0;
 	}
 
-	inline float ThreadTotal() {
-		if (m_CpuUsageCounter != NULL) {
-			return m_CpuUsageCounter->ThreadTotal(GetCurrentThreadId());
-		}
-		return 0.0;
-	}
-	inline float ThreadUser() {
-		if (m_CpuUsageCounter != NULL) {
-			return m_CpuUsageCounter->ThreadUser(GetCurrentThreadId());
-		}
-		return 0.0;
-	}
-	inline float ThreadKernel() {
-		if (m_CpuUsageCounter != NULL) {
-			return m_CpuUsageCounter->ThreadKernel(GetCurrentThreadId());
-		}
-		return 0.0;
-	}
-	inline float ThreadTotal(DWORD thID) {
-		if (m_CpuUsageCounter != NULL) {
-			return m_CpuUsageCounter->ThreadTotal(thID);
-		}
-		return 0.0;
-	}
-	inline float ThreadUser(DWORD thID) {
-		if (m_CpuUsageCounter != NULL) {
-			return m_CpuUsageCounter->ThreadUser(thID);
-		}
-		return 0.0;
-	}
-	inline float ThreadKernel(DWORD thID) {
-		if (m_CpuUsageCounter != NULL) {
-			return m_CpuUsageCounter->ThreadKernel(thID);
-		}
-		return 0.0;
-	}
+	//inline float ThreadTotal() {
+	//	if (m_CpuUsageCounter != NULL) {
+	//		return m_CpuUsageCounter->ThreadTotal(GetCurrentThreadId());
+	//	}
+	//	return 0.0;
+	//}
+	//inline float ThreadUser() {
+	//	if (m_CpuUsageCounter != NULL) {
+	//		return m_CpuUsageCounter->ThreadUser(GetCurrentThreadId());
+	//	}
+	//	return 0.0;
+	//}
+	//inline float ThreadKernel() {
+	//	if (m_CpuUsageCounter != NULL) {
+	//		return m_CpuUsageCounter->ThreadKernel(GetCurrentThreadId());
+	//	}
+	//	return 0.0;
+	//}
+	//inline float ThreadTotal(DWORD thID) {
+	//	if (m_CpuUsageCounter != NULL) {
+	//		return m_CpuUsageCounter->ThreadTotal(thID);
+	//	}
+	//	return 0.0;
+	//}
+	//inline float ThreadUser(DWORD thID) {
+	//	if (m_CpuUsageCounter != NULL) {
+	//		return m_CpuUsageCounter->ThreadUser(thID);
+	//	}
+	//	return 0.0;
+	//}
+	//inline float ThreadKernel(DWORD thID) {
+	//	if (m_CpuUsageCounter != NULL) {
+	//		return m_CpuUsageCounter->ThreadKernel(thID);
+	//	}
+	//	return 0.0;
+	//}
 
 	//void ConsolePrint() {
 	//	HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
